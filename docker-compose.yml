@@ -1,0 +1,58 @@
+version: '3.7'
+
+networks:
+  childlanglab:
+    name: ${LABMEMBER_NAME}_local
+
+services:
+  webserver:
+    image: exbuilder/nginx:stable-alpine
+    container_name: ${LABMEMBER_NAME}_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./experiments:/var/www/html:delegated
+    depends_on:
+      - php
+      - postgres
+    networks:
+      - childlanglab
+
+  php:
+    image: exbuilder/php:7.4-fpm-alpine
+    container_name: ${LABMEMBER_NAME}_php
+    volumes:
+      - ./experiments:/var/www/html:delegated
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_TABLE=${DB_TABLE}
+      - DB_SSLMODE=${DB_SSLMODE}
+    ports:
+      - "9000:9000"
+    networks:
+      - childlanglab
+
+  postgres:
+    image: postgres:10
+    command: ["postgres", "-c", "log_statement=all"]
+    container_name: ${LABMEMBER_NAME}_postgres
+    restart: unless-stopped
+    tty: true
+    ports: 
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment: 
+      POSTGRES_DATABASE: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_ROOT_PASSWORD: ${DB_PASSWORD}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: postgres
+    networks:
+      - childlanglab
+  
