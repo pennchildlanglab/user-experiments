@@ -2,24 +2,28 @@
 
     include('config.php');
 
+    use Aws\S3\S3Client;
     use Aws\Exception\AwsException;
     use Aws\S3\ObjectUploader;
 
-    print_r($_FILES);
-    print_r($_REQUEST);
+    $key = $_REQUEST['filename'];
+    $file = $_REQUEST['randomid']+'.webm';
+    file_put_contents($file, base64_decode($_REQUEST['base64_audio']));
 
-    // create an uploader object
+    // Using stream instead of file path
+    $source = fopen($file, 'rb');
+
     $uploader = new ObjectUploader(
-        $client, // the s3 client (from config.php)
-        $bucket, // the bucket to save to
-        $_REQUEST['filename'].".wav", //the filenmae from the form submitted
-        fopen($_FILES['filedata']['tmp_name'], 'r+'), //the audio file from the form submitted
-        'private', //the acl
-        array('params' => array('ContentType' => 'audio/wav')), // the options parameter to specify the content type
-
+        $client,
+        $bucket,
+        $key,
+        $source,
+        'private'
+        // $options = []
+        //     $command['ContentType'] = 'audio/webm';
+        
     );
 
-    // try to upload the object; if it's too big, do a multipart upload.
     do {
         try {
             $result = $uploader->upload();
@@ -29,10 +33,14 @@
             print($result);
         } catch (MultipartUploadException $e) {
             rewind($source);
-            $uploader = new MultipartUploader($client, $source, [
+            $uploader = new MultipartUploader($s3Client, $source, [
                 'state' => $e->getState(),
             ]);
         }
     } while (!isset($result));
+
+    fclose($source);
+    unlink($file);
+
 
 ?>

@@ -44,10 +44,21 @@ var Childlanglab = {
         })
     },
 
+    checkConsent: function(){
+        var checkbox = document.getElementById('consent_checkbox')
+        if (checkbox.checked){
+            return true;
+        } else {
+            alert("If you wish to participate, you must check the box next to the statement 'I agree to participate in this study.'")
+            return false;
+        }
+        return false;
+    },
+
     insertRun: function(){
 
         // inserts the run to the database (new db row)
-        fetch('../childlanglab/backend/insert_run.php', {
+        fetch('../../childlanglab/backend/insert_run.php', {
             method: 'post',
             body: JSON.stringify(this.run),
         })
@@ -58,7 +69,7 @@ var Childlanglab = {
     updateRun: function(data){
 
         // updates the run in the database (updates the randomid's data column)
-        fetch('../childlanglab/backend/update_run.php', {
+        fetch('../../childlanglab/backend/update_run.php', {
             method: 'post',
             body: JSON.stringify( {
                     json_data: data,
@@ -67,5 +78,28 @@ var Childlanglab = {
         })
         .then(result => {console.log('Success:', result);})
         .catch(error => {console.error('Error:', error);});
+    },
+
+    saveAudio: function(base64_audio, filename){
+        // create build path for filename
+        let path = this.run.project+'/'+this.run.randomid+'/'+filename+'.webm';
+        console.log('saving data as '+path);
+
+        // create a form to send the data via post
+        let form_data = new FormData();
+        form_data.append("base64_audio", base64_audio);
+        form_data.append("filename", path);
+        form_data.append("randomid", this.run.randomid);
+
+        // post the data to the post_media.php script
+        fetch('../../childlanglab/backend/post_media.php',
+        {
+            method: 'post',
+            body: form_data
+        })
+            .then(result => {console.log('Success:', result);})
+            .catch(error => {console.error('Error:', error);});
     }
+
+    
 }

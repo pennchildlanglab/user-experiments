@@ -6,12 +6,15 @@ networks:
 
 services:
   webserver:
-    image: exbuilder/nginx:stable-alpine
+    build: 
+      ./conf/nginx/
     container_name: ${LABMEMBER_NAME}_nginx
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./experiments:/var/www/html:delegated
+      - ./certs/:/etc/nginx/ssl
     depends_on:
       - php
       - postgres
@@ -19,7 +22,8 @@ services:
       - childlanglab
 
   php:
-    image: exbuilder/php:7.4-fpm-alpine
+    build:
+      ./conf/php/
     container_name: ${LABMEMBER_NAME}_php
     volumes:
       - ./experiments:/var/www/html:delegated
@@ -31,6 +35,11 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_TABLE=${DB_TABLE}
       - DB_SSLMODE=${DB_SSLMODE}
+      - S3_ENDPOINT=${S3_ENDPOINT}
+      - S3_REGION=${S3_REGION}
+      - S3_BUCKET=${S3_BUCKET}
+      - S3_KEY=${S3_KEY}
+      - S3_SECRET=${S3_SECRET}
     ports:
       - "9000:9000"
     networks:
@@ -47,12 +56,12 @@ services:
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment: 
-      POSTGRES_DATABASE: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_ROOT_PASSWORD: ${DB_PASSWORD}
-      SERVICE_TAGS: dev
-      SERVICE_NAME: postgres
+      - POSTGRES_DATABASE=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_ROOT_PASSWORD=${DB_PASSWORD}
+      - SERVICE_TAGS=dev
+      - SERVICE_NAME=postgres
     networks:
       - childlanglab
   

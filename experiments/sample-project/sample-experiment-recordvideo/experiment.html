@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://unpkg.com/jspsych@7.3.1"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/extension-record-video@1.0.1"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-external-html@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-initialize-camera@1.0.1"></script>
+    <link rel="stylesheet" href="https://unpkg.com/jspsych@7.3.1/css/jspsych.css" />
+
+    <!--  Add childlanglab.js to connect to database backend   -->
+    <script src="../../childlanglab/frontend/Childlanglab.js"></script>
+  </head>
+  <body></body>
+  <script>
+
+    const jsPsych = initJsPsych({
+      extensions: [
+        { type: jsPsychExtensionRecordVideo}
+      ]
+    });
+
+   Childlanglab.init();
+
+
+    const consent = {
+        type: jsPsychExternalHtml,
+        url: 'consent.html',
+        cont_btn: 'start',
+        check_fun: ''
+    };
+
+
+    const init_camera = {
+      type: jsPsychInitializeCamera
+    };
+
+    const trial = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `<div id="target" style="width:250px; height: 250px; background-color: #333; position: relative; margin: 2em auto;">
+          <div class="orbit" style="width:25px; height:25px; border-radius:25px;background-color: #f00; position: absolute; top:calc(50% - 12px); left:calc(50% - 12px);"></div>
+        </div>
+        <style>
+          .orbit {
+            transform: translateX(100px);
+            animation: orbit 4s infinite;
+          }
+          @keyframes orbit {
+            0% {
+              transform: rotate(0deg) translateX(100px);
+            }
+            100% {
+              transform: rotate(360deg) translateX(100px);
+            }
+          }
+        </style>`,
+      choices: ['Done'],
+      prompt: "<p>Video is recording. Click done after a few seconds.</p>",
+      extensions: [
+        {type: jsPsychExtensionRecordVideo}
+      ],
+      on_finish: function(data){
+        Childlanglab.saveAudio(data.record_video_data, 'trial')
+      }
+    };
+
+    /* start the experiment */
+    jsPsych.run(
+        [init_camera, trial]
+    );
+  </script>
+</html>
