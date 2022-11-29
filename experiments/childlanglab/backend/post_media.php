@@ -6,8 +6,16 @@
     use Aws\Exception\AwsException;
     use Aws\S3\ObjectUploader;
 
-    $key = $_REQUEST['filename'];
-    $file = $_REQUEST['randomid']+'.webm';
+    // get details from the form request
+    $filename = $_REQUEST['filename'];
+    $project = $_REQUEST['project'];
+    $randomid = $_REQUEST['randomid'];
+
+    // generate filename according to our convention project/randomid/trial.webm
+    $key = "{$project}/{$randomid}/{$filename}";
+
+    // create a temporary file with the randomid (so they don't overwrite each other)
+    $file = "{$randomid}.webm";
     file_put_contents($file, base64_decode($_REQUEST['base64_audio']));
 
     // Using stream instead of file path
@@ -19,8 +27,6 @@
         $key,
         $source,
         'private'
-        // $options = []
-        //     $command['ContentType'] = 'audio/webm';
         
     );
 

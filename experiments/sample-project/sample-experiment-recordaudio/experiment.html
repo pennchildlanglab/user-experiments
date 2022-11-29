@@ -16,15 +16,11 @@
   <body></body>
   <script>
 
-    /* initialize Childlanglab */
-    Childlanglab.init();
-
     /* initialize jsPsych */
     var jsPsych = initJsPsych({
       on_finish: function() {
-        //Childlanglab.updateRun(jsPsych.data.get().json());  // ADDS STUDY DATA TO RUN IN LAB DATABASE
+        Childlanglab.saveData(jsPsych.data.get().json()); 
         jsPsych.data.displayData();
-      
       }
     });
 
@@ -33,6 +29,7 @@
       stimulus: '',
       choices: ['Run demo']
     };
+
     var show_data = {
     type: jsPsychHtmlButtonResponse,
     stimulus: function() {
@@ -64,8 +61,9 @@
     recording_duration: 3500,
     save_audio_url: true,
     on_finish: function(data){
-      Childlanglab.insertRun();
-      Childlanglab.saveAudio(data.response, 'test.webm')} 
+      Childlanglab.saveRecording(data.response, 'trial');
+      data.response = 'removed base64 string';
+    } 
   }
 
   var playback = {
@@ -85,10 +83,10 @@
     }
   };
 
-    /* start the experiment */
-    jsPsych.run(
-      [start, init_mic, trial_loop]
-    );
+  var timeline = [start, init_mic, trial_loop];
+      /* init Childlanglab.js then run the jsPsych experiment */
+      Childlanglab.init({consent_url:'https://childlanglab.com/consents/demo-prolific'})
+        .then(run => {jsPsych.run(timeline)})
 
   </script>
 </html>
